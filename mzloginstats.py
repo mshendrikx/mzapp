@@ -40,4 +40,3 @@ mzc.login_stats(driver, nowBr)
 driver.close()
 driver.quit()
 mzc.write_log('End process', 'S')
-
