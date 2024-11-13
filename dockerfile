@@ -2,16 +2,22 @@
 FROM ubuntu:22.04
 
 # Update package lists
-RUN apt update
+RUN apt-get update
 
 # Install software
-RUN apt install -y python3 python3-pip 
+RUN apt-get install -y python3 python3-pip wget
+
+RUN install -d -m 0755 /etc/apt/keyrings
+
+RUN wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null
+
+RUN echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" | tee -a /etc/apt/sources.list.d/mozilla.list > /dev/null
+
+RUN echo 'Package: * Pin: origin packages.mozilla.org Pin-Priority: 1000 ' | tee /etc/apt/preferences.d/mozilla
+
+RUN apt-get update && apt-get install firefox-nightly -y
 
 WORKDIR /app
-
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-
-RUN dpkg -i google-chrome-stable_current_amd64.deb
 
 COPY requirements.txt .
 
