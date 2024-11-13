@@ -19,7 +19,7 @@ def mzdriver(mzuser, mzpass):
         options.add_argument("--no-sandbox")
         options.add_argument("--lang=en")
         options.add_argument("--headless")
-        driver = webdriver.Chrome(options=options) 
+        driver = webdriver.Firefox(options=options) 
         driver.get('https://www.managerzone.com/?changesport=soccer&lang=en')
 
     except Exception as e:

@@ -8,6 +8,7 @@ mysql-connector
 pandas
 psutil
 pymysql
+python-dotenv
 pytz
 selenium
 webdriver-manager

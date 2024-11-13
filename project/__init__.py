@@ -34,7 +34,7 @@ def create_app():
         db.create_all()
 
         # add admin user to the database
-        user = User.query.filter_by(id="admin").first()
+        user = User.query.filter_by(email="admin@mzapp.com").first()
         if not user:
             new_user = User(
                 email="admin@mzapp.com",

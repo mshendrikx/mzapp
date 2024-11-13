@@ -3,3 +3,4 @@
 *.sh
 test*
 temp*
+debug.py
