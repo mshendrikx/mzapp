@@ -13,10 +13,11 @@ def create_app():
 
     mariadb_pass = os.environ.get("MZDBPASS")
     mariadb_host = os.environ.get("MZDBHOST")
+    mariadb_database = os.environ.get("MZDBNAME")
 
     app.config["SECRET_KEY"] = os.urandom(24).hex()
     app.config["SQLALCHEMY_DATABASE_URI"] = (
-        "mysql+pymysql://root:" + mariadb_pass + "@" + mariadb_host
+        "mysql+pymysql://root:" + mariadb_pass + "@" + mariadb_host + "/" + mariadb_database
     )
 
     db.init_app(app)
@@ -36,12 +37,12 @@ def create_app():
         user = User.query.filter_by(id="admin").first()
         if not user:
             new_user = User(
-                id="admin",
+                email="admin@mzapp.com",
                 name="Administrator",
-                groupid=0,
-                password=generate_password_hash("F00tDr4w", method="pbkdf2:sha256"),
+                password=generate_password_hash("Mz4pp", method="pbkdf2:sha256"),
                 admin="X",
-                email=" ",
+                mzuser=os.environ.get("MZUSER"),
+                mzpass=os.environ.get("MZPASS"),
             )
             db.session.add(new_user)
             db.session.commit()

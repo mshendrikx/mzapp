@@ -19,6 +19,11 @@ RUN apt-get update && apt-get install firefox-nightly -y
 
 WORKDIR /app
 
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.35.0/geckodriver-v0.35.0-linux64.tar.gz
+RUN tar -xvzf geckodriver-v0.35.0-linux64.tar.gz
+RUN chmod +x geckodriver
+RUN mv geckodriver /usr/local/bin/
+
 COPY requirements.txt .
 
 RUN pip3 install -r requirements.txt

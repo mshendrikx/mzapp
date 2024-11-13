@@ -5,58 +5,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
 from webdriver_manager.chrome import ChromeDriverManager
+import os
 import time
 import pytz
 import mysql.connector
 import subprocess
-import mzdeclaration as mzd
 
-def db_backup():
-
-    backupFile = mzd.DB_LOCATION + mzd.MZDBNAME + '-' + str(time_now('N')) + '.sql'
-    # Construct the mysqldump command
-    cmd = f"docker exec mariadb mysqldump --user={mzd.MZDBUSER} --password={mzd.MZDBPASS} {mzd.MZDBNAME} > {backupFile}"
-
-    # Execute the mysqldump command
-    subprocess.call(cmd, shell=True)
-
-
-def login_stats(driver, nowBr):
-
-    connl, cursorl = db_connect()
-    onlineUsers = WebDriverWait(driver, 60).until(
-        EC.presence_of_element_located((By.XPATH, '//*[@id="header-stats-wrapper"]/h5[5]')))
-    
-    onlineUsers = int(only_numerics(onlineUsers.text))
-    dateTime = int(nowBr.strftime('%Y%m%d%H%M'))
-    weekDay = nowBr.strftime('%A')
-    timeStr = nowBr.strftime('%H:%M')
-    hourStr = nowBr.strftime('%H')
-
-    try:
-        cursorl.execute("""
-        REPLACE INTO loginstats (
-        datetime,
-        weekday,
-        time,
-        hour,
-        onlineusers)
-        VALUES (%s,%s,%s,%s,%s)
-        """, (
-            dateTime,
-            weekDay, 
-            timeStr,
-            hourStr,
-            onlineUsers))
-        
-        connl.commit()
-
-    except:
-        1 == 1
-
-    connl.close()
-
-def mz_login(mzuser, mzpass, loadImages, headless, useProxy):
+def mz_login(mzuser, mzpass):
 
     try:       
         ChromeDriverManager().install()
@@ -67,16 +22,11 @@ def mz_login(mzuser, mzpass, loadImages, headless, useProxy):
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--no-sandbox")
         options.add_argument("--lang=en")
-        #options.add_argument("--log-level=3")
         options.add_argument("--remote-debugging-port=9222") 
-        if headless == True: 
-            options.add_argument("--headless")
-        #if loadImages == False: 
-        #    options.add_argument('--blink-settings=imagesEnabled=false')
-    
-        #driver = webdriver.Chrome(options=options, desired_capabilities=capabilities)  
+        options.add_argument("--headless")
         driver = webdriver.Chrome(options=options) 
         driver.get('https://www.managerzone.com/?changesport=soccer&lang=en')
+
     except Exception as e:
         # Driver initlization fails
         return e, 1
@@ -135,7 +85,7 @@ def db_connect():
         count += 1
         try:
             conn = mysql.connector.connect(
-                user=mzd.MZDBUSER, password=mzd.MZDBPASS, host=mzd.MZDBHOST, database=mzd.MZDBNAME)
+                user=os.environ.get("MZDBUSER"), password=os.environ.get("MZDBUSER"), host=os.environ.get("MZDBHOST"), database=os.environ.get("MZDBNAME"))
             cursor = conn.cursor(buffered=True)
             connOk = True
         except:
@@ -152,7 +102,7 @@ def time_now(type):
 
     nowUtc = datetime.utcnow()
     nowUtc = nowUtc.replace(tzinfo=pytz.utc)
-    nowBr = nowUtc.astimezone(pytz.timezone(mzd.MZ_TZ))
+    nowBr = nowUtc.astimezone(pytz.timezone(os.environ.get("MZ_TZ")))
     if type == 'S':
         return nowBr.strftime('%Y/%m/%d-%H:%M')
     elif type == 'N':
