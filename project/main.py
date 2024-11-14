@@ -10,6 +10,11 @@ from .models import User
 
 main = Blueprint("main", __name__)
 
+@main.route("/")
+def index():
+
+    return render_template("index.html", user=current_user)
+
 @main.route("/profile")
 @login_required
 def profile():
@@ -48,3 +53,20 @@ def profile_post():
     db.session.commit()
 
     return redirect(url_for("main.profile"))
+
+@main.route("/configuration")
+@login_required
+def configuration():
+
+    if current_user.admin == "":
+        flash("Só administradores podem configurar.")
+        flash("alert-danger")
+        return redirect(url_for("main.index"))
+
+    users = User.query.order_by(User.name).all()
+
+    return render_template(
+        "configuration.html",
+        current_user=current_user,
+        users=users,
+    )
