@@ -228,7 +228,7 @@ def update_countries():
             )
             db.session.add(new_country)
 
-        db.session.commit()
+    db.session.commit()
     
     driver.close()       
     

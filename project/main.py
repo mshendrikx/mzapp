@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash
 from flask_login import login_required, current_user
 from . import db
 from .models import User, Updates
-from common import update_countries, control_data
+from .common import update_countries, control_data
 main = Blueprint("main", __name__)
 
 @main.route("/")
@@ -80,9 +80,9 @@ def run_update(updateid):
         flash("Atualização iniciada")
         flash("alert-success")        
         
-        if updateid == 1:
+        if updateid == '1':
             control_data()
-        elif updateid == 2:
+        elif updateid == '2':
             update_countries()
 
     else:
