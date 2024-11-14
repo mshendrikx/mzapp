@@ -16,8 +16,10 @@ import pandas as pd
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from .models import User, Updates, Mzcontrol, Player, Countries
-from . import db
 
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 def only_numerics(seq):
     seq_type= type(seq)
@@ -172,6 +174,8 @@ def get_distinct_numbers_random(start, end):
 
 def update_countries():
 
+    db = get_db()
+
     driver = mzdriver()
     if driver == None:
         return None
@@ -207,7 +211,7 @@ def update_countries():
             msgLog = 'Fail to get data for country: ' + countryName 
             continue
         
-        country = Countries.query.filter_by(id=countryID).first()
+        country = db.query(Countries).filter_by(id=countryID).first()
         if country:
             country.name = countryName
             country.flag = countryImage
@@ -217,12 +221,15 @@ def update_countries():
                 name = countryName,
                 flag = countryImage,            
             )
-            db.session.add(new_country)
-    db.session.commit()
+            db.add(new_country)
+    db.commit()
     driver.close()       
+    db.close()
     
 def control_data():
 
+   db = get_db()
+   
    driver = mzdriver()
    if driver == None:
        return None
@@ -230,13 +237,28 @@ def control_data():
    seasonInfo = WebDriverWait(driver, 30).until(
                            EC.presence_of_element_located((By.XPATH, '//*[@id="header-stats-wrapper"]/h5[3]')))
    season = int(only_numerics(seasonInfo.text.split('·')[0]))
-   mzcontrol = Mzcontrol.query.first()
+   mzcontrol = db.query(Mzcontrol).first()
    old_season = mzcontrol.season
    mzcontrol.season = season
-   db.session.commit()
+   db.commit()
    if season != old_season:
-       players = Player.query.all()
+       players = db.query(Player).all()
        for player in players:
            player.age = season - player.season
-   db.session.commit()
+   db.commit()
    driver.close()
+   db.close()
+   
+def get_db():
+    
+    mariadb_pass = os.environ.get("MZDBPASS")
+    mariadb_host = os.environ.get("MZDBHOST")
+    mariadb_database = os.environ.get("MZDBNAME")
+    
+    sql_text = "mysql+pymysql://root:" + mariadb_pass + "@" + mariadb_host + "/" + mariadb_database
+    
+    engine = create_engine(sql_text)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = SessionLocal()
+    
+    return db

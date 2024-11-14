@@ -1,4 +1,5 @@
 import os
+import multiprocessing
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from sqlalchemy import and_
@@ -7,7 +8,6 @@ from flask_login import login_required, current_user
 from . import db
 from .models import User, Updates
 from .common import update_countries, control_data
-from apscheduler.schedulers.background import BackgroundScheduler
 
 main = Blueprint("main", __name__)
 
@@ -80,17 +80,20 @@ def run_update(updateid):
         # Atualizar dados de controle
         flash("Atualização iniciada")
         flash("alert-success")        
+
+#        if updateid == '1':
+#            control_data()
+#        elif updateid == '2':
+#            update_countries()
         
-        scheduler = BackgroundScheduler()
         if updateid == '1':
             #control_data()
-            scheduler.add_job(control_data, 'interval', seconds=1)
+            process = multiprocessing.Process(target=control_data)
         elif updateid == '2':
             #update_countries()
-            scheduler.add_job(update_countries, 'interval', seconds=1)
+            process = multiprocessing.Process(target=update_countries)
 
-        scheduler.start()
-        scheduler.shutdown()
+        process.start()
 
     else:
         flash("Somente administrador pode executar esta função")

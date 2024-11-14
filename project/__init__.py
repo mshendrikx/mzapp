@@ -59,7 +59,7 @@ def create_app():
         if not update:
             new_update = Updates(
                 id=1,
-                name='Control Data',
+                name='Control',
             )
             db.session.add(new_update)
 
@@ -68,7 +68,7 @@ def create_app():
         if not update:
             new_update = Updates(
                 id=2,
-                name='Country Data',
+                name='Country',
             )
             db.session.add(new_update)
                         
