@@ -6,7 +6,7 @@ from sqlalchemy import and_
 from werkzeug.security import generate_password_hash
 from flask_login import login_required, current_user
 from . import db
-from .models import User
+from .models import User, Updates
 
 main = Blueprint("main", __name__)
 
@@ -63,10 +63,10 @@ def configuration():
         flash("alert-danger")
         return redirect(url_for("main.index"))
 
-    users = User.query.order_by(User.name).all()
-
+    updates = Updates.query.order_by(Updates.id).all()
+    
     return render_template(
         "configuration.html",
         current_user=current_user,
-        users=users,
+        updates=updates,
     )

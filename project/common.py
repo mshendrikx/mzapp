@@ -160,5 +160,4 @@ def get_distinct_numbers_random(start, end):
 
     num_set = set(range(start, end + 1))
     random_numbers = random.sample(num_set, len(num_set))
-    return random_numbers
-
+    return random_numbers    

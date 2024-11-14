@@ -87,3 +87,7 @@ class Bids(db.Model):
     transferdate = db.Column(db.Integer, primary_key=True)
     maxbid = db.Column(db.Integer)    
     active = db.Column(db.Integer)
+    
+class Updates(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))

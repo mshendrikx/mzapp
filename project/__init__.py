@@ -5,6 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
 
+from .models import User, Updates
+
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
 
@@ -26,8 +28,6 @@ def create_app():
     login_manager.login_view = "auth.login"
     login_manager.init_app(app)
 
-    from .models import User
-
     with app.app_context():
 
         # Create tables
@@ -44,8 +44,17 @@ def create_app():
                 mzuser=os.environ.get("MZUSER"),
                 mzpass=os.environ.get("MZPASS"),
             )
-            db.session.add(new_user)
-            db.session.commit()
+            db.session.add(new_user)            
+            
+        update = Updates.query.filter_by(id=1).first()        
+        if not update:
+            new_update = Updates(
+                id=1,
+                name='Dados de Controle',
+            )
+            db.session.add(new_update)
+            
+        db.session.commit()
 
     @login_manager.user_loader
     def load_user(userid):
