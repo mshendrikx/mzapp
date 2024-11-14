@@ -4,3 +4,4 @@
 test*
 temp*
 debug.py
+project/__pycache__

@@ -4,3 +4,4 @@
 test*
 temp*
 debug.py
+*__pycache__*

@@ -2,8 +2,9 @@ from flask_login import UserMixin
 from . import db
 
 class User(UserMixin, db.Model):
-    email = db.Column(db.String(100), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
+    email = db.Column(db.String(100))
     password = db.Column(db.String(1000))
     admin = db.Column(db.String(1))    
     mzuser = db.Column(db.String(100))  
@@ -81,7 +82,7 @@ class Tranfers(db.Model):
     actualprice  = db.Column(db.Integer)
     
 class Bids(db.Model):
-    email = db.Column(db.String(100), primary_key=True)
+    userid = db.Column(db.Integer, primary_key=True)
     playerid = db.Column(db.Integer, primary_key=True)
     transferdate = db.Column(db.Integer, primary_key=True)
     maxbid = db.Column(db.Integer)    
