@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash
 from flask_login import login_required, current_user
 from . import db
 from .models import User, Updates
-
+from common import update_countries, control_data
 main = Blueprint("main", __name__)
 
 @main.route("/")
@@ -70,3 +70,41 @@ def configuration():
         current_user=current_user,
         updates=updates,
     )
+    
+@main.route("/run_update/<updateid>")
+@login_required
+def run_update(updateid):
+
+    if current_user.admin == "X":
+        # Atualizar dados de controle
+        flash("Atualização iniciada")
+        flash("alert-success")        
+        
+        if updateid == 1:
+            control_data()
+        elif updateid == 2:
+            update_countries()
+
+    else:
+        flash("Somente administrador pode executar esta função")
+        flash("alert-danger")
+
+    return redirect(url_for("main.configuration"))
+
+@main.route("/change_update/<updateid>")
+@login_required
+def change_update(updateid):
+
+    if current_user.admin == "X":
+        
+        if updateid == 1:
+            1 == 1
+        # Atualizar dados de controle
+        flash("Atualização iniciada")
+        flash("alert-success")
+
+    else:
+        flash("Somente administrador pode executar esta função")
+        flash("alert-danger")
+
+    return redirect(url_for("main.configuration"))

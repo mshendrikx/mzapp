@@ -5,8 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
 
-from .models import User, Updates
-
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
 
@@ -29,10 +27,20 @@ def create_app():
     login_manager.init_app(app)
 
     with app.app_context():
-
+        
         # Create tables
+        from .models import User, Updates, Mzcontrol
         db.create_all()
 
+        mzcontrol = Mzcontrol.query.first()
+        
+        if not mzcontrol:
+            new_mzcontrol = Mzcontrol(
+                id='MZCONTROL',
+                season = 0,
+                deadline = 0,
+            )
+            db.session.add(new_mzcontrol)    
         # add admin user to the database
         user = User.query.filter_by(email="admin@mzapp.com").first()
         if not user:
@@ -45,15 +53,25 @@ def create_app():
                 mzpass=os.environ.get("MZPASS"),
             )
             db.session.add(new_user)            
-            
+        
+        # Dados de Controle
         update = Updates.query.filter_by(id=1).first()        
         if not update:
             new_update = Updates(
                 id=1,
-                name='Dados de Controle',
+                name='Control Data',
             )
             db.session.add(new_update)
-            
+
+        # Dados dos Países
+        update = Updates.query.filter_by(id=2).first()        
+        if not update:
+            new_update = Updates(
+                id=2,
+                name='Country Data',
+            )
+            db.session.add(new_update)
+                        
         db.session.commit()
 
     @login_manager.user_loader

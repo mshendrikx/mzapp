@@ -11,11 +11,19 @@ import mysql.connector
 import subprocess
 import smtplib
 import random
+import pandas as pd
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from .models import User, Updates, Mzcontrol, Player, Countries
 
-def mzdriver(mzuser, mzpass):
+from . import db
+
+def only_numerics(seq):
+    seq_type= type(seq)
+    return seq_type().join(filter(seq_type.isdigit, seq))
+
+def mzdriver(mzuser=os.environ.get("MZUSER"), mzpass=os.environ.get("MZPASS")):
 
     try:       
         options = Options()    
@@ -160,4 +168,93 @@ def get_distinct_numbers_random(start, end):
 
     num_set = set(range(start, end + 1))
     random_numbers = random.sample(num_set, len(num_set))
-    return random_numbers    
+    return random_numbers
+
+def update_countries():
+
+    driver = mzdriver()
+    
+    if driver == None:
+        return None
+
+    driver.get('https://www.managerzone.com/?p=national_teams&type=senior')
+    selCountry = WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.NAME, "cid")))
+    countries_sel = selCountry.find_elements(By.TAG_NAME, 'option')
+
+    countries = []
+    for country_sel in countries_sel:
+        country = []
+        country.append(country_sel.get_attribute('value'))
+        country.append(country_sel.text)
+        countries.append(country)
+
+    
+    driver.get('https://www.managerzone.com/?p=rank&sub=countryrank')
+
+    driver.get('https://www.managerzone.com/?p=rank&sub=countryrank')
+    countryRankTable = driver.find_element(By.XPATH, '//*[@id="countryRankTable"]/tbody')
+    countryRankTable = countryRankTable.find_elements(By.TAG_NAME, 'tr')
+    flagsData = []
+    for countryRank in countryRankTable:
+        flagData = []
+        countryData = countryRank.find_elements(By.TAG_NAME, 'td')
+        flagData.append(countryData[2].text)
+        flagData.append(countryData[3].find_element(By.TAG_NAME, 'img').screenshot_as_base64)
+        flagsData.append(flagData)
+
+    flagsArray = pd.DataFrame(flagsData, columns=['name', 'image'])
+    flagsArray = flagsArray.set_index('name')
+
+    for country in countries:
+        try:
+            countryID = int(country[0])
+            countryName = country[1]
+            countryImage = flagsArray.loc[countryName].image
+        except:
+            msgLog = 'Fail to get data for country: ' + countryName 
+            continue
+        
+        country = Countries.query.filter_by(id=countryID).first()
+        
+        if country:
+            country.name = countryName
+            country.flag = countryImage
+        else:
+            new_country = Countries(
+                id=countryID,
+                name = countryName,
+                flag = countryImage,            
+            )
+            db.session.add(new_country)
+
+        db.session.commit()
+    
+    driver.close()       
+    
+def control_data():
+
+    driver = mzdriver()
+    
+    if driver == None:
+        return None
+
+    driver.get('https://www.managerzone.com/?p=clubhouse')
+
+    seasonInfo = WebDriverWait(driver, 30).until(
+                            EC.presence_of_element_located((By.XPATH, '//*[@id="header-stats-wrapper"]/h5[3]')))
+
+    season = int(only_numerics(seasonInfo.text.split('·')[0]))
+    
+    mzcontrol = Mzcontrol.query.first()
+    old_season = mzcontrol.season
+    mzcontrol.season = season
+    db.session.commit()
+
+    if season != old_season:
+        players = Player.query.all()
+        for player in players:
+            player.age = season - player.season
+    db.session.commit()
+    
+    driver.close()
