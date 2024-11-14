@@ -30,11 +30,11 @@
                     {% endif %}
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.profile') }}">Perfil</a>
+                        <a class="nav-link" href="{{ url_for('main.profile') }}">Profile</a>
                     </li>
                     {% if current_user.admin == 'X' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.configuration') }}">Configuração</a>
+                        <a class="nav-link" href="{{ url_for('main.configuration') }}">Configuration</a>
                     </li>
                     {% endif %}
                     <li class="nav-item">

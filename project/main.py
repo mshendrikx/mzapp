@@ -1,4 +1,3 @@
-import random
 import os
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for
@@ -8,6 +7,8 @@ from flask_login import login_required, current_user
 from . import db
 from .models import User, Updates
 from .common import update_countries, control_data
+from apscheduler.schedulers.background import BackgroundScheduler
+
 main = Blueprint("main", __name__)
 
 @main.route("/")
@@ -80,10 +81,16 @@ def run_update(updateid):
         flash("Atualização iniciada")
         flash("alert-success")        
         
+        scheduler = BackgroundScheduler()
         if updateid == '1':
-            control_data()
+            #control_data()
+            scheduler.add_job(control_data, 'interval', seconds=1)
         elif updateid == '2':
-            update_countries()
+            #update_countries()
+            scheduler.add_job(update_countries, 'interval', seconds=1)
+
+        scheduler.start()
+        scheduler.shutdown()
 
     else:
         flash("Somente administrador pode executar esta função")
