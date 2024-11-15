@@ -91,3 +91,9 @@ class Bids(db.Model):
 class Updates(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
+    minute = db.Column(db.String(100))
+    hour = db.Column(db.String(100))
+    dayofmonth = db.Column(db.String(100))
+    month = db.Column(db.String(100))
+    dayofweek = db.Column(db.String(100))
+    function = db.Column(db.String(100))
