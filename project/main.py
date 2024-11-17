@@ -80,11 +80,6 @@ def run_update(updateid):
         # Atualizar dados de controle
         flash("Atualização iniciada")
         flash("alert-success")        
-
-#        if updateid == '1':
-#            control_data()
-#        elif updateid == '2':
-#            update_countries()
         
         if updateid == '1':
             #control_data()

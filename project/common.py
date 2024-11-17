@@ -21,6 +21,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+from project import db
+
 def only_numerics(seq):
     seq_type= type(seq)
     return seq_type().join(filter(seq_type.isdigit, seq))
@@ -175,7 +177,7 @@ def get_distinct_numbers_random(start, end):
 def update_countries():
 
     db = get_db()
-
+    
     driver = mzdriver()
     if driver == None:
         return None
@@ -227,27 +229,27 @@ def update_countries():
     db.close()
     
 def control_data():
+    
+#    db = get_db()
 
-   db = get_db()
-   
-   driver = mzdriver()
-   if driver == None:
-       return None
-   driver.get('https://www.managerzone.com/?p=clubhouse')
-   seasonInfo = WebDriverWait(driver, 30).until(
-                           EC.presence_of_element_located((By.XPATH, '//*[@id="header-stats-wrapper"]/h5[3]')))
-   season = int(only_numerics(seasonInfo.text.split('·')[0]))
-   mzcontrol = db.query(Mzcontrol).first()
-   old_season = mzcontrol.season
-   mzcontrol.season = season
-   db.commit()
-   if season != old_season:
-       players = db.query(Player).all()
-       for player in players:
-           player.age = season - player.season
-   db.commit()
-   driver.close()
-   db.close()
+    driver = mzdriver()
+    if driver == None:
+        return None
+    driver.get('https://www.managerzone.com/?p=clubhouse')
+    seasonInfo = WebDriverWait(driver, 30).until(
+                            EC.presence_of_element_located((By.XPATH, '//*[@id="header-stats-wrapper"]/h5[3]')))
+    season = int(only_numerics(seasonInfo.text.split('·')[0]))
+    mzcontrol = db.query(Mzcontrol).first()
+    old_season = mzcontrol.season
+    mzcontrol.season = season
+    db.commit()
+    if season != old_season:
+        players = db.query(Player).all()
+        for player in players:
+            player.age = season - player.season
+    db.commit()
+    driver.close()
+#    db.close()
    
 def get_db():
     

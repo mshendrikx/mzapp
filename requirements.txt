@@ -1,5 +1,5 @@
-apscheduler
 flask
+Flask-APScheduler
 flask_basicauth
 flask_session
 Flask-Babel

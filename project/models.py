@@ -97,3 +97,4 @@ class Updates(db.Model):
     month = db.Column(db.String(100))
     dayofweek = db.Column(db.String(100))
     function = db.Column(db.String(100))
+    active = db.Column(db.Integer)

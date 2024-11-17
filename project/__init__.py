@@ -4,24 +4,32 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
-from apscheduler.schedulers.background import BackgroundScheduler
+from flask_apscheduler import APScheduler
 
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
 
-# init Background Scheduler 
-scheduler = BackgroundScheduler()
+# init Background Scheduler
 
 def create_app():
-    app = Flask(__name__)
-
+    
     mariadb_pass = os.environ.get("MZDBPASS")
     mariadb_host = os.environ.get("MZDBHOST")
     mariadb_database = os.environ.get("MZDBNAME")
 
+    app = Flask(__name__)
+    
+    scheduler = APScheduler()
+    scheduler.init_app(app) 
+    
     app.config["SECRET_KEY"] = os.urandom(24).hex()
     app.config["SQLALCHEMY_DATABASE_URI"] = (
-        "mysql+pymysql://root:" + mariadb_pass + "@" + mariadb_host + "/" + mariadb_database
+        "mysql+pymysql://root:"
+        + mariadb_pass
+        + "@"
+        + mariadb_host
+        + "/"
+        + mariadb_database
     )
 
     db.init_app(app)
@@ -31,20 +39,21 @@ def create_app():
     login_manager.init_app(app)
 
     with app.app_context():
-        
+
         # Create tables
-        from .models import User, Mzcontrol
+        from .models import User, Mzcontrol      
+        
         db.create_all()
 
         mzcontrol = Mzcontrol.query.first()
-        
+
         if not mzcontrol:
             new_mzcontrol = Mzcontrol(
-                id='MZCONTROL',
-                season = 0,
-                deadline = 0,
+                id="MZCONTROL",
+                season=0,
+                deadline=0,
             )
-            db.session.add(new_mzcontrol)    
+            db.session.add(new_mzcontrol)
         # add admin user to the database
         user = User.query.filter_by(email="admin@mzapp.com").first()
         if not user:
@@ -56,11 +65,31 @@ def create_app():
                 mzuser=os.environ.get("MZUSER"),
                 mzpass=os.environ.get("MZPASS"),
             )
-            db.session.add(new_user)            
-        
-        # Control Data        
+            db.session.add(new_user)
+
+        # Background Jobs        
+        from .models import Updates   
         check_updates(updateid=1)
         check_updates(updateid=2)
+        updates = Updates.query.all()
+        
+    from .common import update_countries, control_data
+    for update in updates:
+        if update.active == 1:
+            scheduler.add_job(
+                id=str(update.id),                  
+                func=update.function,
+                trigger='cron',
+                minute=update.minute,
+                hour=update.hour,
+                day=update.dayofmonth,
+                month=update.month,
+                day_of_week=update.dayofweek,
+                max_instances=1,
+                #id=str(update.id),
+            )
+    
+    scheduler.start()
 
     @login_manager.user_loader
     def load_user(userid):
@@ -79,28 +108,30 @@ def create_app():
 
     return app
 
-def check_updates(updateid):
-    
+
+def check_updates(updateid=0):
+
     if updateid == 1:
-        update_name = 'Control'
+        update_name = "Control"
+        update_function = "control_data"
     elif updateid == 2:
-        update_name = 'Countries'
-    
+        update_name = "Countries"
+        update_function = "update_countries"
+
     from .models import Updates
-                
-    update = Updates.query.filter_by(id=updateid).first()        
+
+    update = Updates.query.filter_by(id=updateid).first()
     if not update:
         new_update = Updates(
             id=updateid,
             name=update_name,
-            minute='',
-            hour='',
-            dayofmonth='',
-            month='',
-            dayofweek='',
-            function='',
+            minute="*",
+            hour="*",
+            dayofmonth="*",
+            month="*",
+            dayofweek="*",
+            function=update_function,
             active=0,
         )
         db.session.add(new_update)
         db.session.commit()
-    
