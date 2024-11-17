@@ -9,8 +9,6 @@ from flask_apscheduler import APScheduler
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
 
-# init Background Scheduler
-
 def create_app():
     
     mariadb_pass = os.environ.get("MZDBPASS")
@@ -73,21 +71,24 @@ def create_app():
         check_updates(updateid=2)
         updates = Updates.query.all()
         
-    from .common import update_countries, control_data
-    for update in updates:
-        if update.active == 1:
-            scheduler.add_job(
-                id=str(update.id),                  
-                func=update.function,
-                trigger='cron',
-                minute=update.minute,
-                hour=update.hour,
-                day=update.dayofmonth,
-                month=update.month,
-                day_of_week=update.dayofweek,
-                max_instances=1,
-                #id=str(update.id),
-            )
+        from .common import update_countries, control_data
+        for update in updates:
+            if update.active == 1:
+                try:
+                    id_str = str(update.id)
+                    scheduler.add_job(
+                        id=id_str,                  
+                        func=update.function,
+                        trigger='cron',
+                        minute=update.minute,
+                        hour=update.hour,
+                        day=update.dayofmonth,
+                        month=update.month,
+                        day_of_week=update.dayofweek,
+                        max_instances=1,
+                    )
+                except Exception as e:
+                    print(e)                    
     
     scheduler.start()
 
