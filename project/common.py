@@ -3,7 +3,7 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime
+from datetime import datetime 
 import os
 import time
 import pytz
@@ -20,8 +20,11 @@ from .models import User, Updates, Mzcontrol, Player, Countries
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from flask_apscheduler import APScheduler
 
-from project import db
+#from project import db
+
+scheduler = APScheduler()
 
 def only_numerics(seq):
     seq_type= type(seq)
@@ -230,7 +233,7 @@ def update_countries():
     
 def control_data():
     
-#    db = get_db()
+    db = get_db()
 
     driver = mzdriver()
     if driver == None:
@@ -264,3 +267,31 @@ def get_db():
     db = SessionLocal()
     
     return db
+
+def get_scheduler():
+
+    updates = Updates.query.all()
+
+    for update in updates:
+        if update.active == 1:
+            try:
+                id_str = str(update.id)
+                scheduler.add_job(
+                    id=id_str,                  
+                    func="control_data",
+                    trigger='cron',
+                    minute=update.minute,
+                    hour=update.hour,
+                    day=update.dayofmonth,
+                    month=update.month,
+                    day_of_week=update.dayofweek,
+                    max_instances=1,
+                )
+            except Exception as e:
+                print(e)                    
+
+    scheduler.start()
+    
+    return scheduler
+
+    

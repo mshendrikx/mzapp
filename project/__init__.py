@@ -4,7 +4,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
-from flask_apscheduler import APScheduler
 
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
@@ -16,10 +15,7 @@ def create_app():
     mariadb_database = os.environ.get("MZDBNAME")
 
     app = Flask(__name__)
-    
-    scheduler = APScheduler()
-    scheduler.init_app(app) 
-    
+      
     app.config["SECRET_KEY"] = os.urandom(24).hex()
     app.config["SQLALCHEMY_DATABASE_URI"] = (
         "mysql+pymysql://root:"
@@ -66,31 +62,12 @@ def create_app():
             db.session.add(new_user)
 
         # Background Jobs        
-        from .models import Updates   
         check_updates(updateid=1)
         check_updates(updateid=2)
-        updates = Updates.query.all()
-        
-        from .common import update_countries, control_data
-        for update in updates:
-            if update.active == 1:
-                try:
-                    id_str = str(update.id)
-                    scheduler.add_job(
-                        id=id_str,                  
-                        func=update.function,
-                        trigger='cron',
-                        minute=update.minute,
-                        hour=update.hour,
-                        day=update.dayofmonth,
-                        month=update.month,
-                        day_of_week=update.dayofweek,
-                        max_instances=1,
-                    )
-                except Exception as e:
-                    print(e)                    
-    
-    scheduler.start()
+
+        from .common import get_scheduler
+        scheduler = get_scheduler()
+        scheduler.init_app(app)
 
     @login_manager.user_loader
     def load_user(userid):
