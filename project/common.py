@@ -20,11 +20,9 @@ from .models import User, Updates, Mzcontrol, Player, Countries
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from flask_apscheduler import APScheduler
+
 
 #from project import db
-
-scheduler = APScheduler()
 
 def only_numerics(seq):
     seq_type= type(seq)
@@ -268,30 +266,10 @@ def get_db():
     
     return db
 
-def get_scheduler():
+def get_active_background_jobs():
 
-    updates = Updates.query.all()
+    updates = Updates.query.filter_by(active=1)
 
-    for update in updates:
-        if update.active == 1:
-            try:
-                id_str = str(update.id)
-                scheduler.add_job(
-                    id=id_str,                  
-                    func="control_data",
-                    trigger='cron',
-                    minute=update.minute,
-                    hour=update.hour,
-                    day=update.dayofmonth,
-                    month=update.month,
-                    day_of_week=update.dayofweek,
-                    max_instances=1,
-                )
-            except Exception as e:
-                print(e)                    
-
-    scheduler.start()
-    
-    return scheduler
+    return updates
 
     

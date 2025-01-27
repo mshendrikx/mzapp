@@ -4,9 +4,11 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
+from flask_apscheduler import APScheduler
 
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
+scheduler = APScheduler()
 
 def create_app():
     
@@ -27,7 +29,8 @@ def create_app():
     )
 
     db.init_app(app)
-
+    scheduler.init_app(app)
+    
     login_manager = LoginManager()
     login_manager.login_view = "auth.login"
     login_manager.init_app(app)
@@ -65,9 +68,9 @@ def create_app():
         check_updates(updateid=1)
         check_updates(updateid=2)
 
-        from .common import get_scheduler
-        scheduler = get_scheduler()
-        scheduler.init_app(app)
+        from .common import get_active_background_jobs
+        updates = get_active_background_jobs()
+        
 
     @login_manager.user_loader
     def load_user(userid):

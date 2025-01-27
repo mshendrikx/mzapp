@@ -6,6 +6,7 @@ from sqlalchemy import and_
 from werkzeug.security import generate_password_hash
 from flask_login import login_required, current_user
 from . import db
+form . import scheduler
 from .models import User, Updates
 from .common import update_countries, control_data
 
